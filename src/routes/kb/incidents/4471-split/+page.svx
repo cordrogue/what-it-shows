@@ -1,0 +1,75 @@
+---
+layout: runbook
+title: '#4471 · what it holds: one ticket per problem'
+owner: cordrogue
+status: open
+reviewed: 2026-11-01
+signature: 'v1.eyJzdWIiOiIxMTczIiwiYXVkIjoiY2hhbGxlbmdlOndoYXQtaXQtc2hvd3MiLCJpYXQiOjE3OTM1NjMzODEsImV4cCI6MTc5MzY0OTc4MX0.nYSHJrLcOsrPzVKRCdlInt_UDun7KBrCpgs0VX1AAIQ'
+---
+
+<script>
+  import ProblemSplit from '#lib/kb/ProblemSplit.svelte';
+  import CauseTable from '#lib/kb/CauseTable.svelte';
+  import Callout from '#lib/kb/Callout.svelte';
+  import RenderStamp from '#lib/kb/RenderStamp.svelte';
+
+  const REPO = 'https://github.com/cordrogue/what-it-shows/issues';
+  const tickets = { parser: REPO + '/1', hint: REPO + '/2', shift: REPO + '/3' };
+</script>
+
+[#4471](/kb/incidents/4471) is marked *known*: one bug, one fix queued. Its reports say otherwise.
+Read by what each reporter describes and by which tenant they book for, #4471 holds more than
+one problem. Each now has its own ticket, with the count it covers.
+
+<Callout kind="warn">
+The queued parser fix closes only the first row. The form hint and the one-day shift stay
+broken after it ships, and #4471 hides them under the parser count.
+</Callout>
+
+## What #4471 holds
+
+<ProblemSplit ticket={4471} {tickets} />
+
+Counts are built from `reports-4471.json` at render time: repeated rows (the export's pages
+overlap) count once, every report is placed by its tenant (`causes.ts`), and the desk's
+one-day moves (`desk-notes.json`) get their own row. When the export changes, the table changes.
+
+## The problems
+
+**`parser` · the shared parser reads dates month first** ([ticket]({tickets.parser})).
+Every tenant in #4471 writes the day first. The parser reads `07/04` as July 4th, so a
+booking for 7 April goes out on 4 July. Only dates with day and month both 12 or less can swap,
+which is why it looks random to the people who report it. Fix: parse in the tenant's locale.
+
+**`hint` · booking-v3 tells day-first people to type the month first** ([ticket]({tickets.hint})).
+The booking-v3 form prints `MM/DD/YYYY` under its date field. Its tenants (Alder Physio,
+Copper Studio, Pale Harbour) write the day first. Their people type what the hint says, and the
+form reads it day first. This is not the parser: fixing the parser leaves it as it is. Fix: make
+the hint follow the tenant's locale.
+
+**`shift` · dates show one day early** ([ticket]({tickets.shift})).
+These reports are not a swap. "Invite says Tuesday 12 May. Calendar says Monday 11 May."
+"Client in Lisbon got Tuesday. Client in Toronto got Monday." A calendar date is converted
+through a time zone and lands on the day before. The desk had already noted these as one-day
+moves; the old table still counts them as `parser`. One reporter says they stopped reporting
+these, so the real number is higher. Fix: keep booking dates date-only end to end.
+
+## Why intake's tags do not count
+
+Intake tags a report from the reporter's browser the moment it arrives. The cause depends on the
+tenant and the form they run. The table above shows how often intake's tag matches the problem. Count from the tenant, not
+from the tag.
+
+## The old view, for comparison
+
+The table on [#4471](/kb/incidents/4471), with the same data:
+
+<CauseTable ticket={4471} />
+
+## Lessons
+
+- A big ticket can be several bugs that look alike. Before you merge, ask what fix closes each report.
+- Same symptom, same subject line, same ticket does not mean same cause
+  ([decision 0001](/kb/decisions/0001-dedupe-by-subject) merges on subject alone).
+
+<RenderStamp {signature} />
