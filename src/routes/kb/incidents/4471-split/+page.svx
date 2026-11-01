@@ -15,50 +15,63 @@ signature: 'v1.eyJzdWIiOiIxMTczIiwiYXVkIjoiY2hhbGxlbmdlOndoYXQtaXQtc2hvd3MiLCJpY
 
   const REPO = 'https://github.com/cordrogue/what-it-shows/issues';
   const tickets = { parser: REPO + '/1', hint: REPO + '/2', shift: REPO + '/3' };
+  // From engineering's update: #4471 closed 05 Oct.
+  const outcomes = {
+    parser: { state: 'fixed', note: 'fix(dates): parse dd/mm for eu locales' },
+    hint: { state: 'wontfix', note: 'booking-v3 form retired' },
+    shift: { state: 'open', note: 'neither change touches it' },
+  };
 </script>
 
-[#4471](/kb/incidents/4471) is marked *known*: one bug, one fix queued. Its reports say otherwise.
+[#4471](/kb/incidents/4471) was marked *known*: one bug, one fix queued. Its reports say otherwise.
 Read by what each reporter describes and by which tenant they book for, #4471 holds more than
 one problem. Each now has its own ticket, with the count it covers.
 
+Engineering closed #4471 on 05 Oct: the parser is fixed, and the booking-v3 form is retired
+instead of fixed. One problem is still open.
+
 <Callout kind="warn">
-The queued parser fix closes only the first row. The form hint and the one-day shift stay
-broken after it ships, and #4471 hides them under the parser count.
+Closing #4471 did not close everything in it. The one-day shift is a time-zone bug, not a
+day/month swap: the parser fix does not touch it, and the desk's view counts it inside the
+parser row, so it looks fixed. It is not. Its ticket stays open.
 </Callout>
 
 ## What #4471 holds
 
-<ProblemSplit ticket={4471} {tickets} />
+<ProblemSplit ticket={4471} {tickets} {outcomes} />
 
-Counts are built from `reports-4471.json` at render time: repeated rows (the export's pages
-overlap) count once, every report is placed by its tenant (`causes.ts`), and the desk's
-one-day moves (`desk-notes.json`) get their own row. When the export changes, the table changes.
+Counts are built from `reports-4471.json` at render time, the way the desk counts them in its own
+view: repeated rows (the export's pages overlap) count once, and every report is placed by its
+tenant (`causes.ts`). The desk's one-day moves (`desk-notes.json`) stay counted where the desk
+filed them and get a row of their own under it. When the export changes, the table changes.
 
 ## The problems
 
 **`parser` · the shared parser reads dates month first** ([ticket]({tickets.parser})).
 Every tenant in #4471 writes the day first. The parser reads `07/04` as July 4th, so a
 booking for 7 April goes out on 4 July. Only dates with day and month both 12 or less can swap,
-which is why it looks random to the people who report it. Fix: parse in the tenant's locale.
+which is why it looks random to the people who report it. **Fixed:** `fix(dates): parse dd/mm for
+eu locales`.
 
 **`hint` · booking-v3 tells day-first people to type the month first** ([ticket]({tickets.hint})).
 The booking-v3 form prints `MM/DD/YYYY` under its date field. Its tenants (Alder Physio,
 Copper Studio, Pale Harbour) write the day first. Their people type what the hint says, and the
-form reads it day first. This is not the parser: fixing the parser leaves it as it is. Fix: make
-the hint follow the tenant's locale.
+form reads it day first. This is not the parser: fixing the parser leaves it as it is. **Won't fix:** the
+booking-v3 form is retired, so its hint is gone with it.
 
 **`shift` · dates show one day early** ([ticket]({tickets.shift})).
 These reports are not a swap. "Invite says Tuesday 12 May. Calendar says Monday 11 May."
 "Client in Lisbon got Tuesday. Client in Toronto got Monday." A calendar date is converted
 through a time zone and lands on the day before. The desk had already noted these as one-day
 moves; the old table still counts them as `parser`. One reporter says they stopped reporting
-these, so the real number is higher. Fix: keep booking dates date-only end to end.
+these, so the real number is higher. **Open:** neither the parser fix nor retiring booking-v3
+touches it. Fix: keep booking dates date-only end to end.
 
 ## Why intake's tags do not count
 
 Intake tags a report from the reporter's browser the moment it arrives. The cause depends on the
-tenant and the form they run. The table above shows how often intake's tag matches the problem. Count from the tenant, not
-from the tag.
+tenant and the form they run. The "tagged as" column in the old view below shows it: both causes carry both tags. Count from
+the tenant, not from the tag.
 
 ## The old view, for comparison
 

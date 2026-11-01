@@ -37,9 +37,9 @@ Exported 2026-10-04 from the `support` repo, `apps/kb/` → `src/`.
 
 ## #4471, split (MEGA.dev S01E03)
 
-- Tickets: [#1 parser](https://github.com/cordrogue/what-it-shows/issues/1) ·
-  [#2 booking-v3 hint](https://github.com/cordrogue/what-it-shows/issues/2) ·
-  [#3 one-day shift](https://github.com/cordrogue/what-it-shows/issues/3)
+- Tickets: [#1 parser, fixed](https://github.com/cordrogue/what-it-shows/issues/1) ·
+  [#2 booking-v3 hint, won't fix](https://github.com/cordrogue/what-it-shows/issues/2) ·
+  [#3 one-day shift, open](https://github.com/cordrogue/what-it-shows/issues/3)
 - The page (.svx): [`src/routes/kb/incidents/4471-split/+page.svx`](src/routes/kb/incidents/4471-split/+page.svx),
   counts from [`src/lib/kb/ProblemSplit.svelte`](src/lib/kb/ProblemSplit.svelte).
 - The page as the desk sees it: [`rendered/kb/incidents/4471-split/index.html`](rendered/kb/incidents/4471-split/index.html)
